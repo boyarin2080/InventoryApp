@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h2 mb-0">
+                    <i class="bi bi-tags me-2"></i>Categories
+                </h1>
+                <a href="{% url 'categories:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create Category
+                </a>
+            </div>
+            <p class="text-muted mt-2">
+                Organize your inventory items into categories and sub-categories.
+            </p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-diagram-3 text-primary fs-1"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1">Hierarchical Structure</h5>
+                            <p class="card-text text-muted mb-1">
+                                Create parent-child relationships for better organization.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-tag text-success fs-1"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1">Total Categories</h5>
+                            <p class="card-text">
+                                <span class="fs-4 fw-bold">{{ total_categories }}</span>
+                                <small class="text-muted d-block">categories in system</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-tree text-warning fs-1"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1">Tree View</h5>
+                            <p class="card-text text-muted mb-1">
+                                <a href="{% url 'categories:tree' %}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-diagram-3 me-1"></i>View Category Tree
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" 
+                                       name="search" 
+                                       class="form-control" 
+                                       placeholder="Search categories by name or description..."
+                                       value="{{ search_query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    Search
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'categories:list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                                </a>
+                                <a href="{% url 'categories:create' %}" class="btn btn-success">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Category
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-list-ul me-2"></i>All Categories
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if categories %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Parent</th>
+                                        <th>Level</th>
+                                        <th>Children</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for category in categories %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-tag-fill me-2" style="color: #2c3e50;"></i>
+                                                    <strong>{{ category.name }}</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if category.description %}
+                                                    <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                                          title="{{ category.description }}">
+                                                        {{ category.description|truncatechars:50 }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">No description</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if category.parent %}
+                                                    <a href="{% url 'categories:detail' pk=category.parent.pk %}" 
+                                                       class="badge bg-info text-decoration-none">
+                                                        {{ category.parent.name }}
+                                                    </a>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Root</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if category.level == 0 %}success{% elif category.level == 1 %}primary{% elif category.level == 2 %}warning{% else %}secondary{% endif %}">
+                                                    Level {{ category.level }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% with child_count=category.children.count %}
+                                                    {% if child_count > 0 %}
+                                                        <span class="badge bg-light text-dark border">
+                                                            <i class="bi bi-diagram-2 me-1"></i>{{ child_count }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="text-muted">None</span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'categories:detail' pk=category.pk %}" 
+                                                       class="btn btn-outline-primary" title="View">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'categories:update' pk=category.pk %}" 
+                                                       class="btn btn-outline-secondary" title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="{% url 'categories:create' %}?parent={{ category.pk }}" 
+                                                       class="btn btn-outline-success" title="Add Sub-category">
+                                                        <i class="bi bi-plus"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-tags fs-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">No categories found</h5>
+                            <p class="text-muted">
+                                {% if search_query %}
+                                    No categories match your search "{{ search_query }}".
+                                {% else %}
+                                    Get started by creating your first category.
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'categories:create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Create First Category
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

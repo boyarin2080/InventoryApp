@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Category Tree - Inventory Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-tree {
+        font-size: 0.95rem;
+    }
+    
+    .tree-node {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .tree-node:before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background-color: #dee2e6;
+    }
+    
+    .tree-node:first-child:before {
+        top: 1rem;
+    }
+    
+    .tree-node:last-child:before {
+        bottom: calc(100% - 1rem);
+    }
+    
+    .tree-node:after {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 1rem;
+        width: 0.5rem;
+        height: 1px;
+        background-color: #dee2e6;
+    }
+    
+    .tree-node-content {
+        padding: 0.5rem;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+    }
+    
+    .tree-node-content:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+        transform: translateX(2px);
+    }
+    
+    .tree-root {
+        padding-left: 0;
+    }
+    
+    .tree-root:before,
+    .tree-root:after {
+        display: none;
+    }
+    
+    .level-indicator {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        line-height: 1rem;
+        text-align: center;
+        background-color: #2c3e50;
+        color: white;
+        border-radius: 50%;
+        font-size: 0.7rem;
+        margin-right: 0.5rem;
+    }
+    
+    .category-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-2">
+                        <i class="bi bi-diagram-3 me-2"></i>Category Tree
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Visual hierarchical representation of all categories
+                    </p>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'categories:list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul me-1"></i>List View
+                    </a>
+                    <a href="{% url 'categories:create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Add Category
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tree Stats -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="display-6 text-primary">{{ total_categories }}</div>
+                            <div class="text-muted">Total Categories</div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="display-6 text-success">{{ category_tree|length }}</div>
+                            <div class="text-muted">Root Categories</div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="display-6 text-warning">{{ total_categories|add:"-"|add:category_tree|length }}</div>
+                            <div class="text-muted">Sub-categories</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Tree -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-hierarchy me-2"></i>Hierarchical Tree Structure
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if category_tree %}
+                        <div class="category-tree">
+                            <!-- Legend -->
+                            <div class="mb-4">
+                                <h6 class="mb-2">Legend:</h6>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <span class="badge bg-primary category-badge">
+                                        <i class="bi bi-circle-fill me-1"></i>Root Category
+                                    </span>
+                                    <span class="badge bg-secondary category-badge">
+                                        <i class="bi bi-circle me-1"></i>Sub-category
+                                    </span>
+                                    <span class="badge bg-success category-badge">
+                                        <i class="bi bi-diagram-2 me-1"></i>Has Children
+                                    </span>
+                                    <span class="badge bg-light text-dark border category-badge">
+                                        <i class="bi bi-tag me-1"></i>No Children
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Tree Structure -->
+                            <div class="mt-4">
+                                {% for root in category_tree %}
+                                    <div class="tree-root mb-4">
+                                        <!-- Root Category -->
+                                        <div class="tree-node-content mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="level-indicator">R</span>
+                                                    <strong class="h5 mb-0">
+                                                        <a href="{% url 'categories:detail' pk=root.category.pk %}" 
+                                                           class="text-decoration-none text-primary">
+                                                            {{ root.category.name }}
+                                                        </a>
+                                                    </strong>
+                                                    {% if root.category.description %}
+                                                        <p class="text-muted mb-0 mt-1 small">
+                                                            {{ root.category.description|truncatechars:100 }}
+                                                        </p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'categories:detail' pk=root.category.pk %}" 
+                                                       class="btn btn-outline-primary">
+                                                        View
+                                                    </a>
+                                                    <a href="{% url 'categories:update' pk=root.category.pk %}" 
+                                                       class="btn btn-outline-secondary">
+                                                        Edit
+                                                    </a>
+                                                    <a href="{% url 'categories:create' %}?parent={{ root.category.pk }}" 
+                                                       class="btn btn-outline-success">
+                                                        Add Child
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Children -->
+                                        {% if root.children %}
+                                            <div class="ms-4">
+                                                {% include 'categories/tree_node.html' with node=root level=1 %}
+                                            </div>
+                                        {% else %}
+                                            <div class="ms-4">
+                                                <div class="alert alert-light border mb-3">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    No sub-categories. 
+                                                    <a href="{% url 'categories:create' %}?parent={{ root.category.pk }}" 
+                                                       class="text-decoration-none">
+                                                        Add the first sub-category
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if not forloop.last %}
+                                        <hr class="my-4">
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-tree fs-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">No categories found</h5>
+                            <p class="text-muted">
+                                Create your first category to start building your hierarchical structure.
+                            </p>
+                            <a href="{% url 'categories:create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Create First Category
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Information -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-question-circle me-2"></i>About the Category Tree
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Understanding the Tree:</h6>
+                            <ul class="small">
+                                <li><strong>Root Categories</strong> appear at the top level (marked with "R")</li>
+                                <li><strong>Indentation</strong> shows parent-child relationships</li>
+                                <li><strong>Level numbers</strong> indicate depth in hierarchy</li>
+                                <li>Click any category name to view details</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Best Practices:</h6>
+                            <ul class="small">
+                                <li>Keep hierarchy depth reasonable (3-4 levels maximum)</li>
+                                <li>Use descriptive names for easy navigation</li>
+                                <li>Plan your structure before creating many categories</li>
+                                <li>Consider future expansion needs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

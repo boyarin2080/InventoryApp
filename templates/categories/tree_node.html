@@ -1,0 +1,55 @@
+{% for child_node in node.children %}
+    <div class="tree-node mb-2">
+        <!-- Child Category -->
+        <div class="tree-node-content">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="level-indicator">{{ level }}</span>
+                    <strong>
+                        <a href="{% url 'categories:detail' pk=child_node.category.pk %}" 
+                           class="text-decoration-none">
+                            {{ child_node.category.name }}
+                        </a>
+                    </strong>
+                    {% if child_node.category.description %}
+                        <p class="text-muted mb-0 mt-1 small">
+                            {{ child_node.category.description|truncatechars:80 }}
+                        </p>
+                    {% endif %}
+                    <div class="mt-2">
+                        <span class="badge bg-light text-dark border small">
+                            Level {{ child_node.category.level }}
+                        </span>
+                        {% if child_node.children %}
+                            <span class="badge bg-success small">
+                                <i class="bi bi-diagram-2 me-1"></i>
+                                {{ child_node.children|length }} children
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <a href="{% url 'categories:detail' pk=child_node.category.pk %}" 
+                       class="btn btn-outline-primary btn-sm">
+                        View
+                    </a>
+                    <a href="{% url 'categories:update' pk=child_node.category.pk %}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        Edit
+                    </a>
+                    <a href="{% url 'categories:create' %}?parent={{ child_node.category.pk }}" 
+                       class="btn btn-outline-success btn-sm">
+                        Add Child
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grandchildren -->
+        {% if child_node.children %}
+            <div class="ms-4 mt-2">
+                {% include 'categories/tree_node.html' with node=child_node level=level|add:1 %}
+            </div>
+        {% endif %}
+    </div>
+{% endfor %}

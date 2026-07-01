@@ -1,0 +1,7 @@
+Django>=4.0
+mysqlclient>=2.0  # For MariaDB/MySQL support in production
+django-crispy-forms>=2.0  # For better form rendering
+crispy-bootstrap5>=0.7  # Bootstrap 5 integration for crispy forms
+whitenoise>=6.0  # For static file serving in production
+gunicorn>=20.0  # WSGI server for production
+python-dotenv>=1.0  # For environment variable management

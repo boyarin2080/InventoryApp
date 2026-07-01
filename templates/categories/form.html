@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'dashboard' %}">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'categories:list' %}">Categories</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+
+            <!-- Form Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-{% if form.instance.pk %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Non-field errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Name Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="bi bi-tag me-1"></i>Category Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.name.help_text %}
+                                <div class="form-text">{{ form.name.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Parent Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.parent.id_for_label }}" class="form-label">
+                                <i class="bi bi-diagram-3 me-1"></i>Parent Category
+                            </label>
+                            {{ form.parent }}
+                            {% if form.parent.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.parent.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.parent.help_text %}
+                                <div class="form-text">{{ form.parent.help_text }}</div>
+                            {% endif %}
+                            
+                            <!-- Parent info if editing and has parent -->
+                            {% if form.instance.pk and form.instance.parent %}
+                                <div class="alert alert-info mt-2">
+                                    <small>
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Current parent: 
+                                        <a href="{% url 'categories:detail' pk=form.instance.parent.pk %}" 
+                                           class="text-decoration-none">
+                                            {{ form.instance.parent.name }}
+                                        </a>
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Description Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="bi bi-card-text me-1"></i>Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.description.help_text %}
+                                <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between mt-5">
+                            <a href="{% if form.instance.pk %}{% url 'categories:detail' pk=form.instance.pk %}{% else %}{% url 'categories:list' %}{% endif %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancel
+                            </a>
+                            <div class="btn-group">
+                                <button type="submit" name="save" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>{{ submit_button }}
+                                </button>
+                                <button type="submit" name="save_and_add_another" class="btn btn-outline-primary">
+                                    <i class="bi bi-plus-circle me-1"></i>Save and Add Another
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-question-circle me-2"></i>About Categories
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Hierarchical Structure:</strong> Categories can have parent-child relationships for better organization.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Unique Names:</strong> Category names must be unique within the same parent category.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>No Circular References:</strong> A category cannot be its own parent or descendant.
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Root Categories:</strong> Categories without a parent appear at the top level.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for form handling -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle save and add another button
+        const form = document.querySelector('form');
+        const saveAndAddButton = form.querySelector('button[name="save_and_add_another"]');
+        
+        if (saveAndAddButton) {
+            saveAndAddButton.addEventListener('click', function(e) {
+                // Add a hidden field to indicate save and add another
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'save_and_add_another';
+                hiddenInput.value = 'true';
+                form.appendChild(hiddenInput);
+            });
+        }
+        
+        // Auto-focus on name field
+        const nameField = document.getElementById('{{ form.name.id_for_label }}');
+        if (nameField) {
+            nameField.focus();
+        }
+        
+        // Add Bootstrap validation classes
+        const formInputs = form.querySelectorAll('input, textarea, select');
+        formInputs.forEach(function(input) {
+            input.addEventListener('blur', function() {
+                if (input.value.trim() === '' && input.hasAttribute('required')) {
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
