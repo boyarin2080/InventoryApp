@@ -22,6 +22,9 @@ RUN apt-get update \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Create static files directory
+RUN mkdir -p /app/staticfiles
+
 # Copy requirements file
 COPY requirements.txt .
 
@@ -32,11 +35,20 @@ RUN pip install --upgrade pip \
 # Copy project files
 COPY . .
 
+# Ensure .env file exists (copy if not present)
+RUN if [ ! -f /app/.env ]; then cp /app/.env.example /app/.env 2>/dev/null || true; fi
+
+# Apply database migrations
+RUN python manage.py migrate --noinput
+
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
 # Create logs directory
 RUN mkdir -p /app/logs
+
+# Set proper permissions for static files
+RUN chmod -R 755 /app/staticfiles
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser \

@@ -14,6 +14,7 @@ services:
       - .env
     environment:
       - DJANGO_ENVIRONMENT=production
+      - DJANGO_ALLOWED_HOSTS=*
     depends_on:
       - db
     restart: unless-stopped
