@@ -3,6 +3,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.safestring import mark_safe
+from django.utils import timezone
 import json
 
 
@@ -59,6 +60,11 @@ class InventoryItem(models.Model):
         choices=STATUS_CHOICES,
         default=STATUS_AVAILABLE,
         help_text=_("Current status of the inventory item")
+    )
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("Date when the item was soft-deleted")
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -275,3 +281,40 @@ class InventoryItem(models.Model):
             self.save(update_fields=['status', 'updated_at'])
             return True
         return False
+    
+    def soft_delete(self):
+        """
+        Soft delete the item by setting deleted_at timestamp.
+        
+        Returns:
+            bool: True if item was soft-deleted, False if already deleted.
+        """
+        if self.deleted_at is None:
+            self.deleted_at = timezone.now()
+            self.status = self.STATUS_SCRAPPED
+            self.save(update_fields=['deleted_at', 'status', 'updated_at'])
+            return True
+        return False
+    
+    def restore(self):
+        """
+        Restore a soft-deleted item.
+        
+        Returns:
+            bool: True if item was restored, False if not deleted.
+        """
+        if self.deleted_at is not None:
+            self.deleted_at = None
+            self.status = self.STATUS_AVAILABLE
+            self.save(update_fields=['deleted_at', 'status', 'updated_at'])
+            return True
+        return False
+    
+    def is_deleted(self):
+        """
+        Check if the item is soft-deleted.
+        
+        Returns:
+            bool: True if deleted_at is set, False otherwise.
+        """
+        return self.deleted_at is not None

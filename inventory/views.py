@@ -16,8 +16,11 @@ class InventoryItemListView(LoginRequiredMixin, ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        """Return inventory items filtered by current user."""
-        queryset = InventoryItem.objects.filter(user=self.request.user)
+        """Return inventory items filtered by current user, excluding deleted items."""
+        queryset = InventoryItem.objects.filter(
+            user=self.request.user,
+            deleted_at__isnull=True
+        )
         
         # Filter by status if provided
         status = self.request.GET.get('status', '')
@@ -42,24 +45,35 @@ class InventoryItemListView(LoginRequiredMixin, ListView):
         """Add additional context for template."""
         context = super().get_context_data(**kwargs)
         
-        # Get unique categories for filtering
+        # Get unique categories for filtering (exclude deleted items)
         from categories.models import Category
-        categories = Category.objects.all().order_by('name')
+        # Get categories that have at least one non-deleted item for this user
+        categories = Category.objects.filter(
+            inventory_items__user=self.request.user,
+            inventory_items__deleted_at__isnull=True
+        ).distinct().order_by('name')
         
         # Get status choices for filtering
         status_choices = InventoryItem.STATUS_CHOICES
         
         # Get filter parameters
+        # For statistics, exclude deleted items
+        from django.utils import timezone
+        queryset = InventoryItem.objects.filter(
+            user=self.request.user,
+            deleted_at__isnull=True
+        )
+        
         context.update({
             'categories': categories,
             'status_choices': status_choices,
             'current_status': self.request.GET.get('status', ''),
             'current_category': self.request.GET.get('category', ''),
             'search_query': self.request.GET.get('search', ''),
-            'total_items': InventoryItem.objects.filter(user=self.request.user).count(),
-            'available_items': InventoryItem.objects.filter(user=self.request.user, status='available').count(),
-            'in_repair_items': InventoryItem.objects.filter(user=self.request.user, status='in_repair').count(),
-            'sold_items': InventoryItem.objects.filter(user=self.request.user, status='sold').count(),
+            'total_items': queryset.count(),
+            'available_items': queryset.filter(status='available').count(),
+            'in_repair_items': queryset.filter(status='in_repair').count(),
+            'sold_items': queryset.filter(status='sold').count(),
         })
         return context
 
@@ -71,8 +85,11 @@ class InventoryItemDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'inventory_item'
     
     def get_queryset(self):
-        """Ensure user can only view their own inventory items."""
-        return InventoryItem.objects.filter(user=self.request.user)
+        """Ensure user can only view their own inventory items, excluding deleted items."""
+        return InventoryItem.objects.filter(
+            user=self.request.user,
+            deleted_at__isnull=True
+        )
     
     def get_context_data(self, **kwargs):
         """Add additional context for template."""
@@ -108,8 +125,9 @@ class InventoryItemCreateView(LoginRequiredMixin, CreateView):
         return context
     
     def form_valid(self, form):
-        """Set the user before saving the form."""
+        """Set the user and ensure deleted_at is null before saving the form."""
         form.instance.user = self.request.user
+        form.instance.deleted_at = None
         return super().form_valid(form)
 
 
@@ -120,8 +138,11 @@ class InventoryItemUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'inventory/form.html'
     
     def get_queryset(self):
-        """Ensure user can only edit their own inventory items."""
-        return InventoryItem.objects.filter(user=self.request.user)
+        """Ensure user can only edit their own inventory items, excluding deleted items."""
+        return InventoryItem.objects.filter(
+            user=self.request.user,
+            deleted_at__isnull=True
+        )
     
     def get_success_url(self):
         """Redirect to inventory item detail view after update."""
@@ -139,9 +160,10 @@ class InventoryItemUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class InventoryItemDeleteView(LoginRequiredMixin, DeleteView):
-    """View for deleting inventory items."""
+    """View for soft-deleting inventory items."""
     model = InventoryItem
     template_name = 'inventory/delete.html'
+    context_object_name = 'inventory_item'
     success_url = reverse_lazy('inventory:list')
     
     def get_queryset(self):
@@ -149,7 +171,12 @@ class InventoryItemDeleteView(LoginRequiredMixin, DeleteView):
         return InventoryItem.objects.filter(user=self.request.user)
     
     def delete(self, request, *args, **kwargs):
-        """Handle delete with success message."""
+        """Handle soft delete with success message."""
         inventory_item = self.get_object()
-        messages.success(request, f'Inventory item "{inventory_item.name}" deleted successfully.')
-        return super().delete(request, *args, **kwargs)
+        inventory_item.soft_delete()
+        messages.success(request, f'Inventory item "{inventory_item.name}" has been moved to deleted items.')
+        return redirect(self.get_success_url())
+    
+    def get_success_url(self):
+        """Redirect to inventory list view."""
+        return reverse('inventory:list')

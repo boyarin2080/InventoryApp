@@ -117,7 +117,14 @@ Convert the feature design into a series of prompts for a code-generation LLM th
     - Add date range filtering for purchase dates
     - _Requirements: 2.4, 3.5_
   
-  - [ ]* 7.4 Write inventory management tests
+  - [x] 7.4 Implement soft delete for inventory items
+    - Add deleted_at DateTimeField to InventoryItem model
+    - Implement soft_delete(), restore(), is_deleted() methods
+    - Update views to use soft delete instead of hard delete
+    - Fix foreign key constraint issues with protected relationships
+    - _Requirements: 3.6_
+  
+  - [ ]* 7.5 Write inventory management tests
     - Test user-based data isolation
     - Test JSON characteristics field functionality
     - Test inventory filtering and search
