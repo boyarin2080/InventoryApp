@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Inventory Item - {{ inventory_item.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'dashboard' %}">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'inventory:list' %}">Inventory Items</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'inventory:detail' pk=inventory_item.pk %}">{{ inventory_item.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+
+            <!-- Delete Confirmation Card -->
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Delete Inventory Item: {{ inventory_item.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Warning Alert -->
+                    <div class="alert alert-danger" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-octagon me-2"></i>
+                            Warning: This action cannot be undone!
+                        </h6>
+                        <p class="mb-0">
+                            You are about to permanently delete the inventory item <strong>"{{ inventory_item.name }}"</strong>.
+                            This will remove all associated data and cannot be recovered.
+                        </p>
+                    </div>
+
+                    <!-- Item Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Item Details
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-3">Name:</dt>
+                                <dd class="col-sm-9">{{ inventory_item.name }}</dd>
+                                
+                                <dt class="col-sm-3">Category:</dt>
+                                <dd class="col-sm-9">
+                                    <a href="{% url 'inventory:list' %}?category={{ inventory_item.category.pk }}" 
+                                       class="badge bg-info text-decoration-none">
+                                        {{ inventory_item.category.name }}
+                                    </a>
+                                </dd>
+                                
+                                <dt class="col-sm-3">Status:</dt>
+                                <dd class="col-sm-9">
+                                    <span class="badge bg-{% if inventory_item.status == 'available' %}success{% elif inventory_item.status == 'in_repair' %}warning{% elif inventory_item.status == 'sold' %}info{% else %}secondary{% endif %}">
+                                        {{ inventory_item.get_status_display }}
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-sm-3">Purchase Date:</dt>
+                                <dd class="col-sm-9">{{ inventory_item.purchase_date|date:"F j, Y" }}</dd>
+                                
+                                <dt class="col-sm-3">Purchase Price:</dt>
+                                <dd class="col-sm-9">${{ inventory_item.purchase_price|floatformat:2 }}</dd>
+                                
+                                <dt class="col-sm-3">Added:</dt>
+                                <dd class="col-sm-9">{{ inventory_item.created_at|date:"F j, Y, g:i a" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    {% if inventory_item.description %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-card-text me-2"></i>
+                                    Description
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {{ inventory_item.description|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Characteristics -->
+                    {% if inventory_item.characteristics %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-music-note me-2"></i>
+                                    Characteristics
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {{ inventory_item.get_characteristics_display|safe }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'inventory:detail' pk=inventory_item.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Cancel - Go Back
+                        </a>
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you absolutely sure? This action cannot be undone.');">
+                                <i class="bi bi-trash me-1"></i>Delete Permanently
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Alternative Actions -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                Alternative Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-pencil text-primary me-2"></i>
+                                                Edit Item
+                                            </h6>
+                                            <p class="card-text small">
+                                                Update item details without deleting it.
+                                            </p>
+                                            <a href="{% url 'inventory:update' pk=inventory_item.pk %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                Edit Item
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <i class="bi bi-box text-info me-2"></i>
+                                                View All Items
+                                            </h6>
+                                            <p class="card-text small">
+                                                Return to your inventory list.
+                                            </p>
+                                            <a href="{% url 'inventory:list' %}" 
+                                               class="btn btn-sm btn-outline-info">
+                                                View Inventory
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for confirmation -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Double confirmation for delete
+        const deleteForm = document.querySelector('form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                if (!confirm('Are you absolutely sure you want to delete this item? This action cannot be undone.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Second confirmation for extra safety
+                if (!confirm('This is your final warning. Click OK to permanently delete the item "' + '{{ inventory_item.name }}' + '".')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

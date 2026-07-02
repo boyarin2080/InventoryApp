@@ -65,3 +65,28 @@ class DashboardView(TemplateView):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        """Add additional context for template."""
+        context = super().get_context_data(**kwargs)
+        
+        # Import models here to avoid circular import
+        from inventory.models import InventoryItem
+        from sales.models import Sale
+        
+        # Calculate statistics
+        total_items = InventoryItem.objects.filter(user=self.request.user).count()
+        available_items = InventoryItem.objects.filter(user=self.request.user, status='available').count()
+        in_repair_items = InventoryItem.objects.filter(user=self.request.user, status='in_repair').count()
+        sold_items = InventoryItem.objects.filter(user=self.request.user, status='sold').count()
+        total_sales = Sale.objects.filter(inventory_item__user=self.request.user).count()
+        
+        context.update({
+            'total_items': total_items,
+            'available_items': available_items,
+            'in_repair_items': in_repair_items,
+            'sold_items': sold_items,
+            'total_sales': total_sales,
+        })
+        
+        return context

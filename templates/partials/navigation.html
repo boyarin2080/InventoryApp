@@ -19,7 +19,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {% if 'inventory' in request.resolver_match.app_name %}active{% endif %}" 
+                           href="{% url 'inventory:list' %}">
                             <i class="bi bi-box me-1"></i>Inventory Items
                         </a>
                     </li>
@@ -30,7 +31,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link {% if 'sales' in request.resolver_match.app_name %}active{% endif %}" 
+                           href="{% url 'sales:list' %}">
                             <i class="bi bi-cash-stack me-1"></i>Sales
                         </a>
                     </li>

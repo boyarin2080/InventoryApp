@@ -29,9 +29,10 @@ urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
     # App URLs
     path('categories/', include('categories.urls')),
-    # TODO: Add other app URLs when apps are implemented
-    # path('inventory/', include('inventory.urls')),
-    # path('sales/', include('sales.urls')),
+    # Inventory URLs
+    path('inventory/', include('inventory.urls')),
+    # Sales URLs
+    path('sales/', include('sales.urls')),
 ]
 
 # Serve static and media files in development

@@ -4,18 +4,25 @@ services:
   # Django application
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 inventory_management.wsgi:application
     volumes:
-      - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - DJANGO_ENVIRONMENT=production
     depends_on:
       - db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
   
   # MariaDB database
   db:
@@ -23,13 +30,19 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     environment:
-      - MYSQL_DATABASE=inventory_management
-      - MYSQL_USER=inventory_user
-      - MYSQL_PASSWORD=inventory_password
-      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=${DJANGO_DB_NAME:-inventory_management}
+      - MYSQL_USER=${DJANGO_DB_USER:-inventory_user}
+      - MYSQL_PASSWORD=${DJANGO_DB_PASSWORD:-inventory_password}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
     ports:
       - "3306:3306"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   
   # phpMyAdmin (optional, for database management)
   phpmyadmin:
@@ -37,6 +50,8 @@ services:
     environment:
       - PMA_HOST=db
       - PMA_PORT=3306
+      - MYSQL_USER=${DJANGO_DB_USER:-inventory_user}
+      - MYSQL_PASSWORD=${DJANGO_DB_PASSWORD:-inventory_password}
     ports:
       - "8080:80"
     depends_on:

@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h2 mb-0">
+                    <i class="bi bi-cash-stack me-2"></i>Sales
+                </h1>
+                <a href="{% url 'sales:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Record Sale
+                </a>
+            </div>
+            <p class="text-muted mt-2">
+                Track sales of repaired electronics and monitor profit margins.
+            </p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-cash-stack text-primary fs-1"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1">Total Sales</h5>
+                            <p class="card-text">
+                                <span class="fs-4 fw-bold">${{ total_sales|floatformat:2 }}</span>
+                                <small class="text-muted d-block">total revenue</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-graph-up text-success fs-1"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1">Total Profit</h5>
+                            <p class="card-text">
+                                <span class="fs-4 fw-bold">${{ total_profit|floatformat:2 }}</span>
+                                <small class="text-muted d-block">net profit</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-list-check text-info fs-1"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1">Number of Sales</h5>
+                            <p class="card-text">
+                                <span class="fs-4 fw-bold">{{ sales|length }}</span>
+                                <small class="text-muted d-block">transactions</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" id="start_date" value="{{ start_date }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control" id="end_date" value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'sales:list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-filter me-1"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales List -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-list-ul me-2"></i>All Sales
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if sales %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Item</th>
+                                        <th>Category</th>
+                                        <th>Sale Price</th>
+                                        <th>Purchase Cost</th>
+                                        <th>Profit</th>
+                                        <th>Profit Margin</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in sales %}
+                                        <tr>
+                                            <td>{{ sale.sale_date|date:"M j, Y" }}</td>
+                                            <td>
+                                                <a href="{% url 'sales:detail' pk=sale.pk %}" 
+                                                   class="text-decoration-none">
+                                                    {{ sale.inventory_item.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'inventory:list' %}?category={{ sale.inventory_item.category.pk }}" 
+                                                   class="badge bg-info text-decoration-none">
+                                                    {{ sale.inventory_item.category.name }}
+                                                </a>
+                                            </td>
+                                            <td>${{ sale.sale_price|floatformat:2 }}</td>
+                                            <td>${{ sale.inventory_item.purchase_price|floatformat:2 }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if sale.is_profitable %}success{% else %}danger{% endif %}">
+                                                    ${{ sale.calculate_profit|floatformat:2 }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if sale.calculate_profit_margin > 20 %}success{% elif sale.calculate_profit_margin > 0 %}warning{% else %}danger{% endif %}">
+                                                    {{ sale.calculate_profit_margin|floatformat:1 }}%
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'sales:detail' pk=sale.pk %}" 
+                                                       class="btn btn-outline-primary" title="View">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                            <nav class="px-4 py-3 border-top">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">
+                                                &laquo; Previous
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    <li class="page-item active">
+                                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">
+                                                Next &raquo;
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-cash-stack fs-1 text-muted mb-3"></i>
+                            <h5 class="text-muted">No sales found</h5>
+                            <p class="text-muted">
+                                {% if start_date or end_date %}
+                                    No sales match your date range.
+                                {% else %}
+                                    Record your first sale to get started.
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'sales:create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Record First Sale
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

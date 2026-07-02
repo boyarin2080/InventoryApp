@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'dashboard' %}">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'inventory:list' %}">Inventory Items</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+
+            <!-- Form Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-{% if form.instance.pk %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                        {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Non-field errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Category Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                <i class="bi bi-tags me-1"></i>Category
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Select the category this item belongs to. 
+                                <a href="{% url 'categories:list' %}" target="_blank" class="text-decoration-none">
+                                    Manage categories &rarr;
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Name Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="bi bi-tag me-1"></i>Item Name
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Description Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="bi bi-card-text me-1"></i>Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Detailed description of the item.</div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Purchase Date Field -->
+                            <div class="col-md-4 mb-4">
+                                <label for="{{ form.purchase_date.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar me-1"></i>Purchase Date
+                                </label>
+                                {{ form.purchase_date }}
+                                {% if form.purchase_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.purchase_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Purchase Price Field -->
+                            <div class="col-md-4 mb-4">
+                                <label for="{{ form.purchase_price.id_for_label }}" class="form-label">
+                                    <i class="bi bi-cash me-1"></i>Purchase Price
+                                </label>
+                                {{ form.purchase_price }}
+                                {% if form.purchase_price.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.purchase_price.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Status Field -->
+                            <div class="col-md-4 mb-4">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">
+                                    <i class="bi bi-dot me-1"></i>Status
+                                </label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.status.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Characteristics Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.characteristics.id_for_label }}" class="form-label">
+                                <i class="bi bi-music-note me-1"></i>Characteristics (JSON)
+                            </label>
+                            {{ form.characteristics }}
+                            {% if form.characteristics.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.characteristics.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="card bg-light mt-2">
+                                <div class="card-body py-2">
+                                    <h6 class="mb-2 small text-muted"><i class="bi bi-info-circle me-1"></i>Example JSON:</h6>
+                                    <code class="small">{&#123;
+                                        <br>&nbsp;&nbsp;"brand": "Apple",
+                                        <br>&nbsp;&nbsp;"model": "iPhone 13 Pro",
+                                        <br>&nbsp;&nbsp;"storage": "256GB",
+                                        <br>&nbsp;&nbsp;"color": "Pacific Blue"
+                                        <br>&#125;</code>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between mt-5">
+                            <a href="{% if form.instance.pk %}{% url 'inventory:detail' pk=form.instance.pk %}{% else %}{% url 'inventory:list' %}{% endif %}" 
+                               class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancel
+                            </a>
+                            <div class="btn-group">
+                                <button type="submit" name="save" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>{{ submit_button }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-question-circle me-2"></i>About Inventory Items
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Category:</strong> Select an appropriate category to organize your inventory.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Characteristics:</strong> Use JSON format to store technical specifications (brand, model, specs, etc.).
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Status Options:</strong>
+                            <ul class="small text-muted mb-0">
+                                <li><strong>Available:</strong> Ready for sale</li>
+                                <li><strong>In Repair:</strong> Currently being repaired</li>
+                                <li><strong>Sold:</strong> Has been sold</li>
+                                <li><strong>Scrapped:</strong> No longer usable</li>
+                            </ul>
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Data Isolation:</strong> You can only view and edit your own inventory items.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
