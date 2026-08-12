@@ -92,23 +92,10 @@ class InventoryItemForm(forms.ModelForm):
                 raise ValidationError(_('Characteristics must be valid JSON.'))
         return characteristics
     
-    def clean(self):
-        """Validate form data."""
-        cleaned_data = super().clean()
+    def __init__(self, *args, **kwargs):
+        """Initialize form and filter category choices to only show active categories."""
+        super().__init__(*args, **kwargs)
         
-        # Validate category is active
-        category = cleaned_data.get('category')
-        if category and not category.is_active:
-            raise ValidationError(
-                _('Cannot add items to an inactive category. Please activate the category first.')
-            )
-        
-        # Validate status transitions
-        status = cleaned_data.get('status')
-        purchase_price = cleaned_data.get('purchase_price')
-        
-        if status == 'sold' and (purchase_price is None or purchase_price <= 0):
-            # This is a warning, not an error - items can be sold for free or at cost
-            pass
-        
-        return cleaned_data
+        # Filter categories to only show active ones
+        from categories.models import Category
+        self.fields['category'].queryset = Category.active_categories()

@@ -67,15 +67,15 @@
                                 <dd class="col-sm-9">{{ sale.sale_date|date:"F j, Y" }}</dd>
 
                                 <dt class="col-sm-3">Sale Price:</dt>
-                                <dd class="col-sm-9">₽{{ sale.sale_price|floatformat:2 }}</dd>
+                                <dd class="col-sm-9">{{ sale.sale_price|floatformat:"0" }}₽</dd>
 
                                 <dt class="col-sm-3">Purchase Cost:</dt>
-                                <dd class="col-sm-9">₽{{ sale.inventory_item.purchase_price|floatformat:2 }}</dd>
+                                <dd class="col-sm-9">{{ sale.inventory_item.purchase_price|floatformat:"0" }}₽</dd>
 
                                 <dt class="col-sm-3">Profit:</dt>
                                 <dd class="col-sm-9">
                                     <span class="badge bg-{% if sale.is_profitable %}success{% else %}danger{% endif %}">
-                                        ₽{{ sale.calculate_profit|floatformat:2 }}
+                                        {{ sale.calculate_profit|floatformat:"0" }}₽
                                     </span>
                                 </dd>
 

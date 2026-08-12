@@ -32,7 +32,7 @@
                         <div class="flex-grow-1 ms-3">
                             <h5 class="card-title mb-1">Total Sales</h5>
                             <p class="card-text">
-                                <span class="fs-4 fw-bold">₽{{ total_sales|floatformat:2 }}</span>
+                                <span class="fs-4 fw-bold">{{ total_sales|floatformat:"0" }}₽</span>
                                 <small class="text-muted d-block">total revenue</small>
                             </p>
                         </div>
@@ -50,7 +50,7 @@
                         <div class="flex-grow-1 ms-3">
                             <h5 class="card-title mb-1">Total Profit</h5>
                             <p class="card-text">
-                                <span class="fs-4 fw-bold">₽{{ total_profit|floatformat:2 }}</span>
+                                <span class="fs-4 fw-bold">{{ total_profit|floatformat:"0" }}₽</span>
                                 <small class="text-muted d-block">net profit</small>
                             </p>
                         </div>
@@ -149,11 +149,11 @@
                                                     {{ sale.inventory_item.category.name }}
                                                 </a>
                                             </td>
-                                            <td>₽{{ sale.sale_price|floatformat:2 }}</td>
-                                            <td>₽{{ sale.inventory_item.purchase_price|floatformat:2 }}</td>
+                                            <td>{{ sale.sale_price|floatformat:"0" }}₽</td>
+                                            <td>{{ sale.inventory_item.purchase_price|floatformat:"0" }}₽</td>
                                             <td>
                                                 <span class="badge bg-{% if sale.is_profitable %}success{% else %}danger{% endif %}">
-                                                    ₽{{ sale.calculate_profit|floatformat:2 }}
+                                                    {{ sale.calculate_profit|floatformat:"0" }}₽
                                                 </span>
                                             </td>
                                             <td>

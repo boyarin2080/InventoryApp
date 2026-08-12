@@ -112,7 +112,7 @@
                                         </span>
                                     </td>
                                     <td>{{ item.purchase_date }}</td>
-                                    <td>${{ item.purchase_price }}</td>
+                                    <td>{{ item.purchase_price|floatformat:"0" }}₽</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

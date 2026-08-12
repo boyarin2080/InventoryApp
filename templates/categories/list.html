@@ -197,6 +197,11 @@
                                                        class="btn btn-outline-success" title="Add Sub-category">
                                                         <i class="bi bi-plus"></i>
                                                     </a>
+                                                    <a href="{% url 'categories:delete' pk=category.pk %}" 
+                                                       class="btn btn-outline-danger" title="Delete"
+                                                       onclick="return confirm('Are you sure you want to delete category \"{{ category.name }}\"? This will move it to inactive categories.');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
