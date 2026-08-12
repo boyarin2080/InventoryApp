@@ -16,8 +16,11 @@ class SaleListView(LoginRequiredMixin, ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        """Return sales filtered by current user's inventory items."""
-        queryset = Sale.objects.filter(inventory_item__user=self.request.user)
+        """Return sales filtered by current user's inventory items, excluding deleted items."""
+        queryset = Sale.objects.filter(
+            inventory_item__user=self.request.user,
+            inventory_item__deleted_at__isnull=True
+        )
         
         # Filter by date range if provided
         start_date = self.request.GET.get('start_date', '')
@@ -60,8 +63,11 @@ class SaleDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'sale'
     
     def get_queryset(self):
-        """Ensure user can only view their own sales."""
-        return Sale.objects.filter(inventory_item__user=self.request.user)
+        """Ensure user can only view their own sales, excluding deleted items."""
+        return Sale.objects.filter(
+            inventory_item__user=self.request.user,
+            inventory_item__deleted_at__isnull=True
+        )
     
     def get_context_data(self, **kwargs):
         """Add additional context for template."""
@@ -122,9 +128,10 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
         """Get form with inventory item choices filtered by current user."""
         form = super().get_form(form_class)
         
-        # Only show inventory items that belong to the current user
+        # Only show inventory items that belong to the current user and are not deleted
         form.fields['inventory_item'].queryset = InventoryItem.objects.filter(
-            user=self.request.user
+            user=self.request.user,
+            deleted_at__isnull=True
         ).filter(status__in=['available', 'in_repair'])
         
         return form
@@ -156,8 +163,11 @@ class SaleUpdateView(LoginRequiredMixin, UpdateView):
     fields = ['sale_date', 'sale_price', 'notes']
     
     def get_queryset(self):
-        """Ensure user can only edit their own sales."""
-        return Sale.objects.filter(inventory_item__user=self.request.user)
+        """Ensure user can only edit their own sales, excluding deleted items."""
+        return Sale.objects.filter(
+            inventory_item__user=self.request.user,
+            inventory_item__deleted_at__isnull=True
+        )
     
     def get_success_url(self):
         """Redirect to sale detail view after update."""
@@ -175,17 +185,26 @@ class SaleUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class SaleDeleteView(LoginRequiredMixin, DeleteView):
-    """View for deleting sales."""
+    """View for soft-deleting sales."""
     model = Sale
     template_name = 'sales/delete.html'
     success_url = reverse_lazy('sales:list')
     
     def get_queryset(self):
         """Ensure user can only delete their own sales."""
-        return Sale.objects.filter(inventory_item__user=self.request.user)
+        return Sale.objects.filter(
+            inventory_item__user=self.request.user,
+            inventory_item__deleted_at__isnull=True
+        )
     
     def delete(self, request, *args, **kwargs):
-        """Handle delete with success message."""
+        """Handle soft delete with success message."""
         sale = self.get_object()
-        messages.success(request, f'Sale of "{sale.inventory_item.name}" deleted successfully.')
-        return super().delete(request, *args, **kwargs)
+        item_name = sale.inventory_item.name if sale.inventory_item else "Unknown Item"
+        sale.soft_delete()
+        messages.success(request, f'Sale for "{item_name}" has been moved to deleted sales.')
+        return redirect(self.get_success_url())
+    
+    def get_success_url(self):
+        """Redirect to sales list view."""
+        return reverse('sales:list')

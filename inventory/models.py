@@ -30,8 +30,10 @@ class InventoryItem(models.Model):
     )
     category = models.ForeignKey(
         'categories.Category',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name='inventory_items',
+        null=True,
+        blank=True,
         help_text=_("Category this item belongs to")
     )
     name = models.CharField(
@@ -284,12 +286,16 @@ class InventoryItem(models.Model):
     
     def soft_delete(self):
         """
-        Soft delete the item by setting deleted_at timestamp.
+        Soft delete the item by setting deleted_at timestamp and nullifying related sales.
         
         Returns:
             bool: True if item was soft-deleted, False if already deleted.
         """
         if self.deleted_at is None:
+            # Nullify related sales first to avoid PROTECT error
+            from sales.models import Sale
+            Sale.objects.filter(inventory_item=self).update(inventory_item=None)
+            
             self.deleted_at = timezone.now()
             self.status = self.STATUS_SCRAPPED
             self.save(update_fields=['deleted_at', 'status', 'updated_at'])
