@@ -48,12 +48,12 @@ class CategoryForm(forms.ModelForm):
             exclude_ids = [descendant.id for descendant in descendants]
             exclude_ids.append(instance.id)
             
-            self.fields['parent'].queryset = Category.objects.exclude(
+            self.fields['parent'].queryset = Category.active_categories().exclude(
                 id__in=exclude_ids
             )
         else:
-            # For new categories, all categories are valid parents
-            self.fields['parent'].queryset = Category.objects.all()
+            # For new categories, only active categories are valid parents
+            self.fields['parent'].queryset = Category.active_categories()
         
         # Add "No parent" option
         self.fields['parent'].empty_label = "--- No parent (top-level category) ---"

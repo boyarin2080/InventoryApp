@@ -85,6 +85,16 @@ Convert the feature design into a series of prompts for a code-generation LLM th
     - Implement breadcrumb navigation for category hierarchy
     - Add category filtering to inventory views
     - _Requirements: 2.2_
+
+  - [x] 5.2.1 Implement soft delete for categories
+    - Add is_active, deleted_at fields to Category model
+    - Implement soft_delete(), restore(), is_deleted() methods
+    - Update CategoryDeleteView to use soft delete instead of hard delete
+    - Update CategoryListView to filter only active categories
+    - Add inactive categories display at bottom of category list
+    - Update inventory forms to prevent creating items in inactive categories
+    - Create and apply database migration
+    - _Requirements: 2.5_
   
   - [ ]* 5.3 Write category management tests
     - Test CRUD operations for categories

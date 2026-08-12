@@ -27,10 +27,10 @@ class InventoryItemListView(LoginRequiredMixin, ListView):
         if status:
             queryset = queryset.filter(status=status)
         
-        # Filter by category if provided
+        # Filter by category if provided (only active categories)
         category = self.request.GET.get('category', '')
         if category:
-            queryset = queryset.filter(category__id=category)
+            queryset = queryset.filter(category__id=category, category__is_active=True)
         
         # Search by name or description
         search_query = self.request.GET.get('search', '')
@@ -45,10 +45,10 @@ class InventoryItemListView(LoginRequiredMixin, ListView):
         """Add additional context for template."""
         context = super().get_context_data(**kwargs)
         
-        # Get unique categories for filtering (exclude deleted items)
+        # Get unique categories for filtering (exclude deleted items and inactive categories)
         from categories.models import Category
         # Get categories that have at least one non-deleted item for this user
-        categories = Category.objects.filter(
+        categories = Category.active_categories().filter(
             inventory_items__user=self.request.user,
             inventory_items__deleted_at__isnull=True
         ).distinct().order_by('name')

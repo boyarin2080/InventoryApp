@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.db.models import UniqueConstraint
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -20,8 +21,17 @@ class Category(models.Model):
         related_name='children',
         help_text=_("Parent category (leave empty for top-level categories)")
     )
+    is_active = models.BooleanField(
+        default=True,
+        help_text=_("Designates whether this category should be treated as active.")
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("Timestamp when category was soft-deleted")
+    )
     
     class Meta:
         verbose_name = _("Category")
@@ -59,8 +69,10 @@ class Category(models.Model):
             )
     
     def save(self, *args, **kwargs):
-        """Override save to run full_clean before saving."""
-        self.full_clean()
+        """Override save to run full_clean before saving unless skip_validation is True."""
+        skip_validation = kwargs.pop('skip_validation', False)
+        if not skip_validation:
+            self.full_clean()
         super().save(*args, **kwargs)
     
     def get_ancestors(self):
@@ -143,6 +155,43 @@ class Category(models.Model):
             QuerySet: QuerySet of root categories.
         """
         return cls.objects.filter(parent__isnull=True)
+    
+    def soft_delete(self):
+        """Soft delete the category by setting is_active=False and deleted_at timestamp."""
+        self.is_active = False
+        self.deleted_at = timezone.now()
+        self.save(skip_validation=True)
+    
+    def restore(self):
+        """Restore a soft-deleted category."""
+        self.is_active = True
+        self.deleted_at = None
+        self.save(skip_validation=True)
+    
+    @property
+    def is_deleted(self):
+        """Check if category is soft-deleted."""
+        return not self.is_active
+    
+    @classmethod
+    def active_categories(cls):
+        """
+        Get all active categories.
+        
+        Returns:
+            QuerySet: QuerySet of active categories.
+        """
+        return cls.objects.filter(is_active=True)
+    
+    @classmethod
+    def inactive_categories(cls):
+        """
+        Get all inactive (soft-deleted) categories.
+        
+        Returns:
+            QuerySet: QuerySet of inactive categories.
+        """
+        return cls.objects.filter(is_active=False)
     
     @property
     def level(self):

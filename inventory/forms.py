@@ -96,6 +96,13 @@ class InventoryItemForm(forms.ModelForm):
         """Validate form data."""
         cleaned_data = super().clean()
         
+        # Validate category is active
+        category = cleaned_data.get('category')
+        if category and not category.is_active:
+            raise ValidationError(
+                _('Cannot add items to an inactive category. Please activate the category first.')
+            )
+        
         # Validate status transitions
         status = cleaned_data.get('status')
         purchase_price = cleaned_data.get('purchase_price')
