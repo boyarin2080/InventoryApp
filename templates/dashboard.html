@@ -66,20 +66,70 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom">
                     <h5 class="mb-0">
-                        <i class="bi bi-box me-2"></i>Recent Inventory Items
+                        <i class="bi bi-box me-2"></i>PC Parts Items
                     </h5>
                 </div>
                 <div class="card-body">
+                    {% if items_available_message %}
+                    <div class="alert alert-info mb-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <div>
+                                <p class="mb-0">{{ items_available_message }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif pc_parts_items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Purchase Date</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in pc_parts_items %}
+                                <tr>
+                                    <td>
+                                        {% if item.category.parent %}
+                                            <strong>{{ item.category.parent.name }}: {{ item.name }}</strong>
+                                        {% else %}
+                                            <strong>{{ item.name }}</strong>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.category.name }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if item.status == 'available' %}bg-success
+                                            {% elif item.status == 'in_repair' %}bg-warning
+                                            {% elif item.status == 'sold' %}bg-info
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ item.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.purchase_date }}</td>
+                                    <td>${{ item.purchase_price }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
                     <div class="alert alert-info mb-0">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-info-circle-fill me-2"></i>
                             <div>
                                 <p class="mb-0">
-                                    No inventory items found. Get started by adding your first electronics item.
+                                    No PC Parts items found. Get started by adding your first PC part item.
                                 </p>
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer bg-white border-top">
                     <a href="{% url 'inventory:create' %}" class="btn btn-primary">
@@ -168,8 +218,7 @@
             <div class="alert alert-light border">
                 <p class="mb-0">
                     <i class="bi bi-lightbulb me-2"></i>
-                    <strong>Tip:</strong> Use categories to organize your electronics inventory (Phones, Graphics Cards, CPUs, etc.). 
-                    Add detailed specifications in the JSON characteristics field for each item.
+                    <strong>Tip:</strong> Use the PC Parts category and its subcategories (GPU, CPU, RAM, etc.) to organize your inventory. Items in subcategories will display as "Subcategory: Item Name" for easy identification.
                 </p>
             </div>
         </div>
